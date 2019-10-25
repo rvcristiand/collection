@@ -118,6 +118,3 @@ if __name__ == "__main__":
     # change value attrs
     coordinate3.x = 0  # Warning: There is another instance of the class 'Coordinate' with the same attibutes. The object was not changed.
     print(coordinate3)  # Coordinate(1, 0, 0)
-    
-    print(UniqueInstances.instancesAttrs)  # {(1, 0, 0), (0, 0, 0)}
-    print(Coordinate.instancesAttrs)  # {(1, 0, 0), (0, 0, 0)}
