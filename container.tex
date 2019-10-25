@@ -1,0 +1,279 @@
+\documentclass{article}
+
+% write in spanish
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+
+%
+\usepackage[titles]{tocloft}
+\newlistof{listing}{lol}{Algoritmos}
+
+%
+\usepackage{listings}
+\lstset{
+	language={[LaTeX]TeX}%,
+	% basicstyle=\tt\color{red},
+}
+\usepackage[inline]{enumitem}
+\usepackage[newfloat]{minted}
+\usepackage{caption}
+
+%
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{%
+  name={Algoritmo},
+  fileext=lol}
+\usepackage{chngcntr}
+\AtBeginDocument{\counterwithin{listing}{section}}
+
+%
+\providecommand{\keywords}[1]{\textbf{\textit{Palabras clave---}} #1}
+
+%
+\title{Instancias únicas con \emph{Python}}
+\author{Cristian Ramírez\\\texttt{rvcristiand@unal.edu.co}}
+\date{\today}
+
+%
+\begin{document}
+	\maketitle
+	\begin{abstract}
+		Se presenta una \emph{metaclase} que no le permite a las \emph{clases} \emph{creadas} con dicha metaclase
+		\begin{enumerate*}[label=\itshape\alph*\upshape)]
+			\item crear \emph{objetos} con los mismos \emph{argumentos} con los que otros objetos de la misma clase han sido \emph{instanciados} ni
+			\item que los \emph{atributos} de los objetos ya instanciados tomen los mismos valores de otros objetos de la misma clase.
+		\end{enumerate*}
+	\end{abstract}
+
+	\keywords{instancias únicas, memorización, metaclase, clase, objeto, atributo}.
+
+	\tableofcontents
+	\listoflistings
+
+	\section{Introducción}
+
+	En ciertos \emph{programas de computador} es necesario \emph{instanciar} \emph{objetos} cuyos valores de sus \emph{atributos} sean diferentes a los de otros objetos de la misma \emph{clase}. Por ejemplo, supóngase que se quiere almacenar coordenadas espaciales únicas, es decir, que dos objetos no describan el mismo punto espacial.
+
+	A continuación se presenta una serie de implementaciones que intentar solucionar el problema, donde se describen sus características, para así llegar a la \emph{metaclase} \emph{UniqueInstances}.
+
+	\subsection{Primera implementación: \emph{programación orientada a objetos. \emph{Primer round}}}
+
+	Esto se puede llevar a cabo \emph{creando} una clase la cual instancie objetos con tres atributos. En el algoritmo \ref{alg:Coordinate} se presenta dicha implementación usando \emph{Python}.
+	\begin{code}
+		\inputminted[firstline=1, lastline=5]{python}{coordinate.py}
+		\captionof{listing}{Clase \emph{Coordinate} que instancia objetos con tres atributos (\emph{x}, \emph{y} y \emph{z}).}
+		\label{alg:Coordinate}
+	\end{code}
+
+	Sin embargo, la clase \emph{Coordinate} permite instanciar varios objetos con los mismos atributos
+	\inputminted[firstline=7, lastline=9]{python}{coordinate.py}
+
+	\subsection{Segunda implementación: \emph{programación procedimental}}
+
+	Para evitar crear objetos con los mismos atributos, se debe llevar el registro de los \emph{argumentos} con los que se van creando los objetos. En el algoritmo \ref{alg:func_createUniqueCoordinates} se implementa la \emph{función} \emph{createUniqueCoordinates}, la cual permite instanciar objetos siempre y cuando los argumentos de entrada no se encuentren en el \emph{diccionario} \emph{coordianteRecord}.
+	\begin{code}
+		\inputminted[firstline=10, lastline=23]{python}{coordinate.py}
+		\captionof{listing}{Función \emph{createUniqueCoordinates} que no permite crear objetos \emph{tipo} \emph{Coordinate} con los mismos argumentos.}
+		\label{alg:func_createUniqueCoordinates}
+	\end{code}
+	
+	% \subsubsection{Memorización}
+
+	% Esta \emph{técnica de programación}, que se llama \emph{memorización} \cite{lee2015data}, se puede emplear cuando una \emph{rutina} es \emph{llamada} más de una vez con los mismos argumentos.
+	
+	% La idea detrás de memorización es \emph{guardar} los argumentos con los que se llama a la rutina con el respectivo resultado, de manera que, cuando se vuelva a llamar a la rutina con alguno de esos valores almacenados, no sea necesario ejecutarla de nuevo sino que se devuelva el resultado que le acompaña. Ésto evita tener que ejecutar la rutina una y otra vez para los mismos argumentos de entrada.
+
+	Aunque la función \emph{createUniqueCoordinates} no permite la instanciación de objetos de la clase \emph{Coordinate} con los mismos argumentos con los que otros objetos fueron creados, aun se permite que un objeto \emph{cambie} de manera tal que tenga los mismos atributos de otros objetos ya creados.
+	\inputminted[firstline=25, lastline=27]{python}{coordinate.py}
+
+	% Para evitar dicho comportamiento, en la siguiente sección se presenta la implementación de la \emph{metaclase} \emph{UniqueInstances}, con la cual se pueden crear clases que mantienen y actualizan el registro de los objetos existentes.
+
+	\subsection{Tercera implementación: \emph{programación orientada a objetos. \emph{Segundo round}}}
+
+	Para evitar que un objeto cambie de manera tal que tenga los mismos atributos de otros objetos ya creados, se debe \emph{verificar} el registro de los argumentos con los que se van creando los objetos antes de que estos cambien. Esto implica \emph{actualizar} dicho registro.
+
+	En el algoritmo \ref{alg:class_UniqueInstances} se implementa la clase \emph{UniqueInstances}, la cual debe ser heredada por otras clases, para que no les permita instanciar objetos cuando los argumentos de entrada se encuentren en el \emph{set} \emph{instancesAttrs}. Así mismo, los objetos instanciados con la \emph{clase hija} no se pueden modificar  si los nuevos atributos se encuentran en dicho \emph{set}.
+	\begin{code}
+		\inputminted[firstline=1, lastline=49, breaklines, linenos]{python}{collection_class.py}
+		\captionof{listing}{Clase \emph{UniqueInstances} que no le permite a las clases que heredan de esta clase crear objetos con los mismos argumentos ni que dichos objetos cambien para tomar los valores de otro objeto de la misma clase.}
+		\label{alg:class_UniqueInstances}
+	\end{code}
+
+	Dicha clase hace uso de varias herramientas de \emph{programación orientada a objetos} las cuales se detallan a continuación.
+
+	\subsubsection{\_\_slots\_\_}
+
+	\begin{sloppypar}
+		En Python, todos los objetos tienen por defecto un atributo llamado \emph{\_\_dict\_\_}, el cual permite que dichos objetos puedan tener un número indeterminado de atributos, es decir
+	\end{sloppypar}
+	\inputminted[firstline=1, lastline=7]{python}{dumpy.py}
+
+	Aunque muy flexible, dicha habilidad consume bastante memoria, más aún si se van a inicializar muchas instancias de esta clase. Por muchas se debe entender crear miles o millones de objetos.
+
+	Si se sabe de antemano la cantidad de atributos que tiene una instancia, éstas se pueden definir en la variable \emph{\_\_slots\_\_}, evitando que dichas instancias tengan la variable \emph{\_\_dict\_\_}, lo que conlleva a un ahorro en memoria.
+
+	En el algoritmo \ref{alg:class_slots} se presenta la implementación de una clase la cual instancia objetos con una cantidad determinada de atributos. Fíjese como los objetos de esta clase no tienen el atributo \emph{\_\_dict\_\_} y, así mismo, no permite que se le agreguen otros atributos.
+	\begin{code}
+		\inputminted[firstline=9, lastline=23]{python}{dumpy.py}
+		\captionof{listing}{Instancias con una cantidad de atributos definida.}
+		\label{alg:class_slots}
+	\end{code}
+
+	Un comentario final. Las clases que deben tener este comportamiento pero que heredan de otra clase, deben asegurarse que la \emph{clase padre} defina la variable \emph{\_\_slots\_\_}. Así mismo, se debe evitar que la clase hija defina variables en el \emph{\_\_slots\_\_} que ya han sido definidas en la clase padre\cite{lutz2013learning}.
+
+	Es por esto que la clase \emph{UniqueInstances} define la variable \emph{\_\_slots\_\_} como una \emph{lista} vacía.
+
+	\subsubsection{\_\_new\_\_ y registro}
+
+	En Python, todos los objetos primero se crean y después se inicializan. El lugar donde se crean los objetos es en \emph{metodo} \emph{\_\_new\_\_}.
+
+	Lo dicho anteriormente se explica mejor con el siguiente ejemplo
+	\inputminted[firstline=25, lastline=30]{python}{dumpy.py}
+
+	Esta clase, aunque tiene más líneas que las clases de la sección anterior, a no ser por el mensaje que se imprime, es igual a
+	\inputminted[firstline=1, lastline=2]{python}{dumpy.py}
+
+	Este método puede ser utilizado para definir como se inicializan los objetos. Es aquí donde se evita instanciar objetos con los mismos atributos.
+
+	En el algoritmo \ref{alg:class_memorize} se recogen las anteriores ideas. Fíjese que cuando se quiere crear un objeto con los mismos valores con los que otro objeto fue instanciado, el método \emph{\_\_new\_\_} no lo permite, ya que detecta que dicho método fue llamado ya con los mismos argumentos.
+	\begin{code}
+		\inputminted[firstline=32, lastline=46]{python}{dumpy.py}
+		\captionof{listing}{Instancias de una clase con valores de atributos diferentes a las demás instancias.}
+		\label{alg:class_memorize}
+	\end{code}
+
+	Un comentario final. Una vez se ejecuta el método \emph{\_\_new\_\_} automáticamente se ejecuta el método \emph{\_\_init\_\_}, siempre y cuando \emph{\_\_new\_\_} no regrese \emph{None}. Es decir que, del algoritmo anterior, se tienen
+	\inputminted[firstline=48, lastline=48]{python}{dumpy.py}
+
+	\subsubsection{\_\_setattr\_\_}
+
+	En Python, el método \emph{\_\_setattr\_\_} es llamado cuando se asigna un atributo a un objeto, por ejemplo
+	\inputminted[firstline=50, lastline=55]{python}{dumpy.py}
+
+	El método \emph{\_\_setattr\_\_} siempre se llama, aún cuando se asignan variables al objeto dentro de la clase, es decir
+	\inputminted[firstline=57, lastline=61]{python}{dumpy.py}
+
+	Teniendo en cuenta lo anteriormente mostrado, en las lineas $ 23 $ a la $ 39 $ del algoritmo \ref{alg:class_UniqueInstances} se implementó el método \emph{\_\_setattr\_\_}, donde lo primero que se verifica es si el atributo a asignar al objeto ya existe, es decir
+	\inputminted[firstline=24, lastline=24]{python}{collection_class.py}
+
+	En caso de que el atributo no haya sigo asignado al objeto, se procede normalmente, es decir
+	\inputminted[firstline=39, lastline=39]{python}{collection_class.py}
+
+	En caso de que el atributo ya haya sido asignado al objeto, se crea una \emph{tupla} con los valores de los atributos que tendría el objeto, es decir,
+	\inputminted[firstline=25, lastline=26, breaklines]{python}{collection_class.py}
+	y se verifica que si dicha \emph{tupla} está o no en el registro de los valores de los atributos de las instancias creadas, es decir,
+	\inputminted[firstline=27, lastline=27, breaklines]{python}{collection_class.py}
+
+	En caso de que dicha \emph{tupla} no se encuentre en el registro, se elimina el la \emph{tupla} del estado actual del objeto, se registra la \emph{tupla} del estado futuro del objeto y se actualiza el valor del atributo del objeto, es decir
+	\inputminted[firstline=28, lastline=30, breaklines]{python}{collection_class.py}
+	\inputminted[firstline=39, lastline=39, breaklines]{python}{collection_class.py}
+
+	En el caso que dicha \emph{tupla} se encuentre en el registro, no se actualiza
+	\inputminted[firstline=32, lastline=37, breaklines]{python}{collection_class.py}
+
+	\subsubsection{\_\_del\_\_}
+
+	En Python, el método \emph{\_\_del\_\_} es llamado cuando se pierde la referencia a un objeto, es decir
+	\inputminted[firstline=63, lastline=68, breaklines]{python}{dumpy.py}
+
+	Cuando esto ocurre, debemos actualizar el registro, tal como sucede en el algoritmo \ref{alg:class_UniqueInstances}
+
+	\inputminted[firstline=48, lastline=49, breaklines]{python}{collection_class.py}
+
+	\subsubsection{Los otros métodos}
+	Los otros métodos de la clase \emph{UniqueInstances} son muy generales, los cuales quedan para estudio del lector.
+
+	\subsubsection{Aplicaciones}
+	Tal como se dijo anteriormente, la clase \emph{UniqueInstances} debe ser heredada por alguna otra clase para que sea útil. Usemos esta clase para almacenar coordenadas espaciales sin que éstas se repitan. Para ello creamos una nueva clase llamada \emph{Coordinates} que herede de la clase \emph{UniqueInstances} y que define tres atributos, es decir
+	\inputminted[firstline=51, lastline=55, breaklines]{python}{collection_class.py}
+
+	Fíjese como asignamos a la variable \emph{\_\_slots\_\_} las cadenas de texto \emph{x}, \emph{y} y \emph{z}, diciéndole a nuestra clase \emph{Coordinate} que sus atributos son los que se definan en dicha variable y los que herede, que, en este caso, no hereda ningún atributo.
+
+	Fíjese también como se sobrecarga el método \emph{\_\_init\_\_}, llamado al método \emph{\_\_init\_\_} de la clase padre, es decir el \emph{\_\_init\_\_}
+	de la clase \emph{UniqueInstances}.
+
+	Con estas líneas de código seremos capaces de lograr lo propuesto, objetos tipo \emph{Coordinate} con valores de sus argumentos únicos.
+
+	Primero, podemos ver los argumentos con los que se han creado los objetos de dicha clase
+	\inputminted[firstline=59, lastline=60, breaklines]{python}{collection_class.py}
+	que nos muestra un \emph{set} vacío, ya que no se han creado objetos de dicha clase.
+
+	También podemos instanciar objetos de nuestra clase
+	\inputminted[firstline=63, lastline=64, breaklines]{python}{collection_class.py}
+
+	Fíjese que para imprimir el objeto se usó el método \emph{\_\_repr\_\_} de la clase \emph{UniqueInstances}.
+
+	Podemos intentar agregar atributos diferentes a los que se presentan en \emph{\_\_slots\_\_} pero no lo vamos a lograr
+	\inputminted[firstline=67, lastline=70, breaklines]{python}{collection_class.py}
+
+	Fíjese que nunca especificamos dicho comportamiento. Éste viene de delegar la responsabilidad al método \emph{\_\_setattr\_\_} de la clase de la cual hereda \emph{UniqueInstances}, que, en este caso, es de la clase por defecto \emph{type}.
+
+	Podemos intentar instanciar un objeto \emph{Coordinate} con los mismos valores de otro objeto de la clase \emph{Coordinate} pero no lo vamos a lograr
+	\inputminted[firstline=76, lastline=77, breaklines]{python}{collection_class.py}
+
+	Fíjese que \emph{repr} llama al método \emph{\_\_repr\_\_} de la clase \emph{UniqueInstances} y que no se puede crear el objeto de la clase \emph{Coordinate} debido al método \emph{\_\_new\_\_} detecta que ya se ha creado un objeto con los mismos argumentos.
+
+	También podemos eliminar el objeto, actualizando el registro de los valores de los atributos de los objetos existentes
+	\inputminted[firstline=82,	 lastline=86,breaklines]{python}{collection_class.py}
+
+	Podemos instanciar más objetos, siempre y cuando se instancien con valores diferentes a los de los argumentos de los demás objetos
+	\inputminted[firstline=89, lastline=90, breaklines]{python}{collection_class.py}
+
+	Ver los valores de los atributos de los objetos existentes
+	\inputminted[firstline=94, lastline=94, breaklines]{python}{collection_class.py}
+
+	Pero no podemos cambiar un objeto par que tome el valor de otro
+	\inputminted[firstline=110, lastline=111, breaklines]{python}{collection_class.py}
+
+	Lamentablemente, la variable \emph{instancesAttrs} de la clase \emph{UniqueInstances} no es diferente de la variable \emph{instancesAttrs} de la clase \emph{Coordinate}
+	\inputminted[firstline=113, lastline=114, breaklines]{python}{collection_class.py}
+	lo que no permite crear cuantas clases sean necesarias con variables \emph{instancesAttrs} independientes.
+
+	\section{Metaclase \emph{UniqueInstances}}
+
+	Para evitar que las clases que heredan de la clase \emph{UniqueInstances} hagan referencia a la misma variable \emph{instancesAttrs}, se debe crear dicha variable para cada una de las clases. Esto implica usar metaclases. En el algoritmo \ref{alg:metaclass_UniqueInstances} se implementa la metaclase \emph{UniqueInstances}, la cual no le permite a las clases instanciadas con dicha metaclase
+	\begin{enumerate*}[label=\itshape\alph*\upshape)]
+		\item crear objetos con los mismos argumentos con los que otros objetos de la misma clase fueron instanciados, 
+		\item que los atributos de un objeto varíen para ser iguales a los de otro objeto de la misma clase y que
+		\item cada clase creada tenga su propia variable \emph{instancesAttrs}.
+	\end{enumerate*}
+
+	\begin{code}
+		\inputminted[firstline=1, lastline=58, linenos, breaklines]{python}{collection.py}
+		\captionof{listing}{Metaclase \emph{UniqueInstances} que instancia clases con un \emph{set} como atributo a las cuales no se le permiten crear objetos con los mismos argumentos ni que estos varíen para ser iguales a otros.}
+		\label{alg:metaclass_UniqueInstances}
+	\end{code}
+
+	Dicha metaclase hace uso de varias herramientas de la \emph{programación orientada a objetos}, las cuales se detallan a continuación.
+
+	\subsection{Metaclases}
+	En Python, las metaclases nos permiten \emph{interceptar} y \emph{aumentar} la creación de clases. En consecuencia, ellas proveen un protocolo general para manejar \emph{objetos de clase} en el programa \cite{lutz2013learning}.
+	En la practica, las metaclases permite un mayor control sobre como las clases funcionan.
+
+	Ya que las clases también son un objeto, es decir
+	\inputminted[firstline=70, lastline=77]{python}{dumpy.py}
+	se puede interceptar la creación de clases para controlarlas.
+
+	Dicha interceptación se hace mediante la definición de una metaclase, es decir
+	\inputminted[firstline=79, lastline=82]{python}{dumpy.py}
+
+	Para que esta metaclase intercepte la creación de clases, hay que especificarlo en las clases de la siguiente manera
+	\inputminted[firstline=84, lastline=85]{python}{dumpy.py}
+	de manera que \emph{MyClass} ya no es de tipo \emph{type} sino de tipo \emph{MyMetaClass}, es decir
+	\inputminted[firstline=87, lastline=87]{python}{dumpy.py}
+
+	De esta manera se puede controlar la creación de clases y, en este caso, darle métodos y atributos por defecto. Esto se hace en las líneas 50 a la 57 del algoritmo \ref{alg:metaclass_UniqueInstances}, donde se reescribieron los métodos del algoritmo \ref{alg:class_UniqueInstances}, es decir
+	\inputminted[firstline=50, lastline=57]{python}{collection.py}
+
+	\subsection{Aplicaciones}
+
+	Todo lo dicho de la sección anterior funciona. Adicionalmente, cada una de las clases creadas a partir de la metaclase \emph{UniqueInstances} tienen un atributo \emph{instancesAttrs} independiente del resto, es decir
+
+	\section{Conclusiones}
+	Se ha creado una metaclase que al ser usada por otras clases hace que las instancias de dichas clases sean únicas.
+
+	\bibliography{bibliography}
+	\bibliographystyle{unsrt}
+
+\end{document}
